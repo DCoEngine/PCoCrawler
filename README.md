@@ -28,7 +28,7 @@ PCoCrawler是一个用于爬取、处理和管理arXiv论文的工具集，支�
 
 ### 爬取arXiv论文
 ```python
-python arxiv_crawler.py --date 2025-01-01 --category cs.CL
+python arxiv_crawler.py --date 2025-01-01 --category cs.CL --keyword machine learning
 ```
 
 ### 处理PDF文件，下载PDF文件到私有FTP服务器
