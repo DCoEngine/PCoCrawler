@@ -1,6 +1,6 @@
 # PCoCrawler - arXiv论文爬取与处理工具
 
-PCoCrawler是一个用于爬取、处理和管理arXiv论文的工具集，支持论文爬取、翻译、分类、PDF下载、知识库上传和RAG处理。
+PCoCrawler是一个用于爬取、处理和管理arXiv论文的工具集，支持论文爬取、翻译、分类、PDF下载、知识库上传和 dify RAG处理。
 
 ## 主要功能
 
