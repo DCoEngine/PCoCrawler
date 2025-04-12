@@ -18,12 +18,8 @@ class ArxivScraper(object):
         date_from,
         date_until,
         category_blacklist=[],
-        #category_whitelist=["cs.CV", "cs.AI", "cs.LG", "cs.CL", "cs.IR", "cs.MA"],
-        #optional_keywords=["LLM", "LLMs", "language model", "language models", "multimodal", "finetuning", "GPT"],
-        #category_whitelist=["cs.DC", "cs.NI", "cs.SE", "cs.AR", "cs.CE", "cs.LG"],
-        #optional_keywords=["Cloud Computing", "Virtualization", "HPC", "GPU"],   
-        category_whitelist=["cs.CV", "cs.GR", "cs.RO", "cs.CG", "cs.SE", "math.NA", "cs.NA", "cs.HC"],
-        optional_keywords=["Rendering", "Geometric ","Reconstruction", "CAD", "CIM", "Computer Graphics", "Simulation", "Ray Tracing", "Real-Time Rendering", "LOD", "NPR"],
+        category_whitelist=["cs.CV", "cs.AI", "cs.LG", "cs.CL", "cs.IR", "cs.MA"],
+        optional_keywords=["LLM", "LLMs", "language model", "language models", "multimodal", "finetuning", "GPT"],
         trans_to="zh-CN",
         proxy=None,
     ):
@@ -427,25 +423,41 @@ if __name__ == "__main__":
     """主函数，用于执行arxiv论文爬取任务
     
     功能：
-    1. 获取当前日期和前一天日期作为爬取时间范围
+    1. 从命令行参数获取日期和分类
     2. 创建ArxivScraper实例，配置爬取参数
     3. 异步运行fetch_all()方法获取论文数据
     4. 将结果导出为markdown文件
     
     参数：
-    无直接参数，但会使用系统当前日期作为爬取时间范围
+    --date: 爬取日期(格式: YYYY-MM-DD)
+    --category: 爬取分类(如cs.CL)
     
     返回：
     无返回值，但会生成markdown文件输出结果
     """
+    import argparse
     from datetime import date, timedelta
 
-    today = date.today()
-    today = today - timedelta(days=1)
+    parser = argparse.ArgumentParser(description='Arxiv论文爬取工具')
+    parser.add_argument('--date', type=str, required=True, 
+                       help='爬取日期(格式: YYYY-MM-DD)')
+    parser.add_argument('--category', type=str, required=True,
+                       help='爬取分类(如cs.CL)')
+    parser.add_argument('--keywords', type=str, required=False,
+                       help='关键词列表，用逗号分隔(如"LLM,language model")')
+    args = parser.parse_args()
+
+    # 处理关键词参数
+    if args.keywords:
+        keywords = [kw.strip() for kw in args.keywords.split(",")]
+    else:
+        keywords = ["LLM", "LLMs", "language model", "language models", "multimodal", "finetuning", "GPT"]
 
     scraper = ArxivScraper(
-        date_from=today.strftime("%Y-%m-%d"),
-        date_until=date.today().strftime("%Y-%m-%d"),
+        date_from=args.date,
+        date_until=args.date,
+        category_whitelist=[args.category],
+        optional_keywords=keywords
     )          
     asyncio.run(scraper.fetch_all())
 
