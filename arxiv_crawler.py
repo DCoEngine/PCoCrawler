@@ -1,14 +1,15 @@
 import asyncio
 import re
+import ftplib
+
 from datetime import datetime, timedelta, UTC
 from itertools import chain
-
 import aiohttp
 from bs4 import BeautifulSoup, NavigableString, Tag
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from arxiv_time import next_arxiv_update_day
-from paper import Paper, PaperDatabase, PaperExporter
+from paper import Paper, PaperDatabase, PaperExporter, FTPClient
 
 
 class ArxivScraper(object):
@@ -17,8 +18,12 @@ class ArxivScraper(object):
         date_from,
         date_until,
         category_blacklist=[],
-        category_whitelist=["cs.CV", "cs.AI", "cs.LG", "cs.CL", "cs.IR", "cs.MA"],
-        optional_keywords=["LLM", "LLMs", "language model", "language models", "multimodal", "finetuning", "GPT"],
+        #category_whitelist=["cs.CV", "cs.AI", "cs.LG", "cs.CL", "cs.IR", "cs.MA"],
+        #optional_keywords=["LLM", "LLMs", "language model", "language models", "multimodal", "finetuning", "GPT"],
+        #category_whitelist=["cs.DC", "cs.NI", "cs.SE", "cs.AR", "cs.CE", "cs.LG"],
+        #optional_keywords=["Cloud Computing", "Virtualization", "HPC", "GPU"],   
+        category_whitelist=["cs.CV", "cs.GR", "cs.RO", "cs.CG", "cs.SE", "math.NA", "cs.NA", "cs.HC"],
+        optional_keywords=["Rendering", "Geometric ","Reconstruction", "CAD", "CIM", "Computer Graphics", "Simulation", "Ray Tracing", "Real-Time Rendering", "LOD", "NPR"],
         trans_to="zh-CN",
         proxy=None,
     ):
@@ -44,7 +49,7 @@ class ArxivScraper(object):
         self.search_from_date = datetime.strptime(date_from[:-3], "%Y-%m")
         self.search_until_date = datetime.strptime(date_until[:-3], "%Y-%m")
         if self.search_from_date.month == self.search_until_date.month:
-            self.search_until_date = (self.search_from_date + timedelta(days=31)).replace(day=1)
+            self.search_until_date = (self.search_from_date + timedelta(days=180)).replace(day=1)
         # 由于arxiv的奇怪机制，每个月的第一天公布的文章总会被视作上个月的文章, 所以需要将月初文章的首次公布日期往后推一天
         self.fisrt_announced_date = next_arxiv_update_day(next_arxiv_update_day(self.search_from_date) + timedelta(days=1))
 
@@ -70,7 +75,7 @@ class ArxivScraper(object):
         """
         返回搜索的元数据
         """
-        return dict(repo_url="https://github.com/huiyeruzhou/arxiv_crawler", **self.__dict__)
+        return dict(repo_url="https://github.com/DCoEngine/PCoCrawler", **self.__dict__)
 
     def get_url(self, start):
         """
@@ -102,7 +107,7 @@ class ArxivScraper(object):
         url = self.get_url(start)
         while error <= 3:
             try:
-                async with aiohttp.ClientSession(trust_env=True, read_timeout=10) as session:
+                async with aiohttp.ClientSession(trust_env=True, read_timeout=180) as session:
                     async with session.get(url, proxy=self.proxy) as response:
                         response.raise_for_status()
                         content = await response.text()
@@ -152,8 +157,8 @@ class ArxivScraper(object):
             self.papers.extend(chain(*papers_list))
 
         self.console.log(f"[bold green]Fetching completed. ")
-        if self.trans_to:
-            await self.translate()
+        #if self.trans_to:
+        #    await self.translate()
         self.process_papers()
 
     def fetch_update(self):
@@ -179,7 +184,7 @@ class ArxivScraper(object):
         # 为了正确获得这天的文章，我们上推一个月的搜索时间
         self.fisrt_announced_date = self.search_from_date
         if self.search_from_date == next_arxiv_update_day(self.search_from_date.replace(day=1)):
-            self.search_from_date = self.search_from_date - timedelta(days=31)
+            self.search_from_date = self.search_from_date - timedelta(days=180)
             self.console.log(f"[bold yellow]The update in {self.fisrt_announced_date.strftime('%Y-%m-%d')} can only be found in the previous month.")
         else:
             self.console.log(
@@ -411,19 +416,37 @@ class ArxivScraper(object):
 
     def to_markdown(self, output_dir="./output_llms", filename_format="%Y-%m-%d", meta=False):
         self.paper_exporter.to_markdown(output_dir, filename_format, self.meta_data if meta else None)
+        print(f"Output saved to {output_dir}")
+
 
     def to_csv(self, output_dir="./output_llms", filename_format="%Y-%m-%d",  header=False, csv_config={},):
         self.paper_exporter.to_csv(output_dir, filename_format, header, csv_config)
 
 
 if __name__ == "__main__":
+    """主函数，用于执行arxiv论文爬取任务
+    
+    功能：
+    1. 获取当前日期和前一天日期作为爬取时间范围
+    2. 创建ArxivScraper实例，配置爬取参数
+    3. 异步运行fetch_all()方法获取论文数据
+    4. 将结果导出为markdown文件
+    
+    参数：
+    无直接参数，但会使用系统当前日期作为爬取时间范围
+    
+    返回：
+    无返回值，但会生成markdown文件输出结果
+    """
     from datetime import date, timedelta
 
     today = date.today()
+    today = today - timedelta(days=1)
 
     scraper = ArxivScraper(
         date_from=today.strftime("%Y-%m-%d"),
-        date_until=today.strftime("%Y-%m-%d"),
-    )
+        date_until=date.today().strftime("%Y-%m-%d"),
+    )          
     asyncio.run(scraper.fetch_all())
+
     scraper.to_markdown(meta=True)
