@@ -592,7 +592,7 @@ if __name__ == "__main__":
     # 文件路径配置
     file_path_config = {
         'tmp_dir': '/data/tmp',  # 临时文件目录
-        'graph_dir': '/AI/paper/Graph'  # Graph文件目录
+        'graph_dir': '/AI/paper/AI'  # Graph文件目录
     }
     
     # PDF翻译配置
