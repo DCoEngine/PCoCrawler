@@ -109,18 +109,30 @@ python batch_down_pdf.py
 
 #### Windows 任务计划程序配置
 
-1. 创建爬取任务：
-   - 打开"任务计划程序" -> 创建任务
-   - 常规选项卡：命名如"arXiv论文爬取"
-   - 触发器：每天凌晨2点
-   - 操作：启动程序 `python.exe`，参数 `d:/Codes/DCoEngine/PCoCrawler/arxiv_crawler.py --date yesterday --category cs.CL`
-   - 条件：只在网络连接时运行
+1. 创建批处理脚本`run_pipeline.bat`(内容如下):
+```bat
+@echo off
+REM 设置日志文件存储位置
+set LOG_DIR=d:/Codes/DCoEngine/PCoCrawler/logs
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-2. 创建PDF处理任务：
-   - 类似配置，但：
-   - 命名如"arXiv PDF处理"
-   - 触发器：每天凌晨3点（爬取完成后1小时）
-   - 操作：启动程序 `python.exe`，参数 `d:/Codes/DCoEngine/PCoCrawler/batch_down_pdf.py`
+REM 运行爬取
+python d:/Codes/DCoEngine/PCoCrawler/arxiv_crawler.py --date yesterday --category cs.CL >> "%LOG_DIR%/arxiv_crawler.log" 2>&1
+
+REM 等待5秒
+timeout /t 5 /nobreak > NUL
+
+REM 运行PDF处理
+python d:/Codes/DCoEngine/PCoCrawler/batch_down_pdf.py >> "%LOG_DIR%/pdf_processor.log" 2>&1
+```
+
+2. 配置任务计划程序:
+   - 打开"任务计划程序" -> 创建任务
+   - 常规选项卡：命名如"arXiv论文处理"
+   - 触发器：每天凌晨2点
+   - 操作：启动程序 `run_pipeline.bat`
+   - 条件：只在网络连接时运行
+3. 日志文件将保存在`d:/Codes/DCoEngine/PCoCrawler/logs/`目录
 
 #### Linux 定时任务
 
