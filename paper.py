@@ -56,6 +56,17 @@ class Paper:
         return self.url.replace("https://arxiv.org/abs", "https://arxiv.org/pdf")
     
     def download_file_with_curl(self, url, output_file_path):
+        """使用curl命令下载文件到指定路径
+        
+        通过subprocess调用系统curl命令下载文件，自动处理下载失败情况。
+
+        Args:
+            url (str): 要下载的文件URL
+            output_file_path (str): 文件保存路径
+
+        Raises:
+            subprocess.CalledProcessError: 如果curl命令执行失败
+        """
         try:
             # 构建 curl 命令
             command = ['curl', '-o', output_file_path, url]
@@ -68,6 +79,17 @@ class Paper:
             print(f"下载失败: {e}")
 
     def save_text_to_file(self, text, file_path):
+        """将文本内容保存到指定文件路径
+        
+        自动创建不存在的目录，并确保使用UTF-8编码保存文本内容。
+
+        Args:
+            text (str): 要保存的文本内容
+            file_path (str): 目标文件路径
+
+        Raises:
+            OSError: 如果目录创建或文件写入失败
+        """
         # 获取文件所在的目录
         directory = os.path.dirname(file_path)
 

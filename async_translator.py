@@ -5,6 +5,17 @@ import requests
 
 
 class TranslateTask:
+    """翻译任务数据类
+    
+    封装翻译任务的相关参数和结果，用于Google翻译API请求。
+
+    Attributes:
+        langfrom (str): 源语言代码，默认为'en'
+        langto (str): 目标语言代码，默认为'zh-CN'
+        raw (str): 待翻译的原始文本
+        result (str): 翻译结果文本
+        secret (str): 自定义翻译API端点URL
+    """
     def __init__(self, raw, langfrom="en", langto="zh-CN", result=None, secret=None):
         self.langfrom = langfrom
         self.langto = langto
@@ -20,6 +31,17 @@ def TL(a):
     """
 
     def RL(a, b):
+        """Google翻译的token生成算法辅助函数
+        
+        实现Google翻译API的token生成算法中的位运算部分。
+
+        Args:
+            a (int): 初始数值
+            b (str): 操作符字符串
+
+        Returns:
+            int: 经过位运算处理后的结果
+        """
         t = "a"
         Yb = "+"
         for c in range(0, len(b) - 2, 3):
@@ -127,6 +149,18 @@ async def async_translate(text, langto="zh-CN", proxy=None):
 
 
 def google_translate(data, url="https://translate.googleapis.com", proxy=None):
+    """同步调用Google翻译API
+    
+    使用requests库同步调用Google翻译API进行文本翻译。
+
+    Args:
+        data (TranslateTask): 翻译任务数据对象
+        url (str): Google翻译API端点，默认为官方API
+        proxy (str): 代理服务器地址，格式为"http://host:port"
+
+    Raises:
+        requests.exceptions.RequestException: 当API请求失败时抛出
+    """
     response = requests.get(
         f"{data.secret if data.secret else url}/translate_a/single",
         params={
@@ -163,6 +197,13 @@ def translate(text, langto="zh-CN", proxy=None):
 
 # 示例Demo
 async def main(proxy="http://127.0.0.1:7890"):
+    """翻译功能示例演示
+    
+    展示如何使用异步和同步方式调用翻译功能。
+
+    Args:
+        proxy (str): 代理服务器地址，格式为"http://host:port"
+    """
     text = await async_translate("Hello, world!", proxy=proxy)
     print(f"Async Translated text: {text}")
     print("Translated text:", translate("hello world", proxy=proxy))

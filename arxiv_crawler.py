@@ -231,6 +231,15 @@ class ArxivScraper(object):
                 )
 
     def update(self, start) -> bool:
+        """
+        更新文章列表，从指定起始位置开始获取新文章
+        
+        Args:
+            start (int): 起始位置索引
+            
+        Returns:
+            bool: 是否还有更多新文章需要更新
+        """
         content = asyncio.run(self.request(start))
         self.papers.extend(self.parse_search_html(content))
         cnt_new = self.paper_db.count_new_papers(self.papers[start : start + self.step])
@@ -372,6 +381,20 @@ class ArxivScraper(object):
         return papers
 
     def parse_search_text(self, tag):
+        """解析搜索结果页面中的文本内容，处理HTML标签和特殊格式
+        
+        处理BeautifulSoup解析的HTML标签，提取纯文本内容，同时处理特殊格式如搜索高亮等。
+        会跳过某些特定类型的标签（如展开/收起控制标签）。
+
+        Args:
+            tag (bs4.element.Tag): BeautifulSoup解析的HTML标签
+            
+        Returns:
+            str: 处理后的纯文本内容，已去除多余空白字符
+
+        Note:
+            此方法会递归处理标签的子节点，合并文本内容
+        """
         string = ""
         for child in tag.children:
             if isinstance(child, NavigableString):
@@ -411,11 +434,28 @@ class ArxivScraper(object):
             await asyncio.gather(*[worker(paper) for paper in self.papers])
 
     def to_markdown(self, output_dir="./output_llms", filename_format="%Y-%m-%d", meta=False):
+        """
+        将爬取的论文数据导出为Markdown格式文件
+        
+        Args:
+            output_dir (str): 输出目录路径
+            filename_format (str): 文件名格式(使用时间格式化字符串)
+            meta (bool): 是否包含元数据
+        """
         self.paper_exporter.to_markdown(output_dir, filename_format, self.meta_data if meta else None)
         print(f"Output saved to {output_dir}")
 
 
     def to_csv(self, output_dir="./output_llms", filename_format="%Y-%m-%d",  header=False, csv_config={},):
+        """
+        将爬取的论文数据导出为CSV格式文件
+        
+        Args:
+            output_dir (str): 输出目录路径
+            filename_format (str): 文件名格式(使用时间格式化字符串)
+            header (bool): 是否包含表头
+            csv_config (dict): CSV格式配置选项
+        """
         self.paper_exporter.to_csv(output_dir, filename_format, header, csv_config)
 
 
