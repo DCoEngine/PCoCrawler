@@ -240,11 +240,11 @@ if __name__ == "__main__":
     dataset_id = ""  # 替换为你的知识库 ID
     api_key = ""  # 替换为你的 API 密钥
         
-    ftp_dir_Prefix = "/AI/paper/HPC/"  # FTP 服务器目录前缀
+    ftp_dir_Prefix = "/AI/paper/AI/"  # FTP 服务器目录前缀
     save_path = "/tmp/" # 保存 PDF 文件的本地路径
-    limit = 1  # 每页返回的文档数量
-    page_max = 38  # 最大页码限制
-    page = 38  # 初始化页码
+    limit = 2  # 每页返回的文档数量
+    page_max = 1  # 最大页码限制
+    page = 1  # 初始化页码
     while True:
         print(f"Fetching page {page}/{page_max}...")
         
