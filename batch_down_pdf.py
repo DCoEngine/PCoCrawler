@@ -90,7 +90,7 @@ def get_segments_and_content(api_url, dataset_id, document_id, api_key):
         return [], []  
 
 
-def process_content(content, ftp_dir_Prefix, save_path):
+def process_content(content, ftp_dir_Prefix, save_path, ftp_host, ftp_user, ftp_password):
     """
     处理 content 内容：
     1. 删除指定的论文链接部分（如果存在）。
@@ -129,13 +129,13 @@ def process_content(content, ftp_dir_Prefix, save_path):
         new_dir_Prefix = os.path.join(ftp_dir_Prefix, first_announced_date, pdf_name).replace("\\", "/")
         
         # 初始化 FTPClient 实例
-        ftp_client_instance = FTPClient() 
+        ftp_client_instance = FTPClient(ftp_host, ftp_user, ftp_password)
         
         if not os.path.exists(pdfFile):
             # 下载 PDF
             download_pdf(link, pdfFile)
         if os.path.exists(pdfFile):
-            ftp_client_instance = FTPClient() 
+            ftp_client_instance = FTPClient(ftp_host, ftp_user, ftp_password)
             ftp_client_instance.connect()            
             ftp_client_instance.upload_file(pdfFile, new_dir_Prefix +"/"+ pdf_name +".pdf")
             ftp_client_instance.disconnect()            
@@ -207,7 +207,7 @@ def update_segment_keywords(api_url, dataset_id, document_id, segment_id, api_ke
     else:
         print(f"Failed to update keywords for segment {segment_id} of document {document_id}. Status code: {response.status_code}, Response: {response.text}")
 
-def batch_proc_documents(api_url, dataset_id, api_key, ftp_dir_Prefix, save_path, page, limit):
+def batch_proc_documents(api_url, dataset_id, api_key, ftp_dir_Prefix, save_path, page, limit, ftp_host, ftp_user, ftp_password):
     """
     批量处理指定知识库 ID 下的单页文档。
 
@@ -229,7 +229,7 @@ def batch_proc_documents(api_url, dataset_id, api_key, ftp_dir_Prefix, save_path
         print(f"Document_id is {document_id}. Document_name is {document_name}.")
         for segment_id, content in zip(segment_ids, contents):
             keywords = extract_fields(content)
-            processed_content = process_content(content, ftp_dir_Prefix, save_path)
+            processed_content = process_content(content, ftp_dir_Prefix, save_path, ftp_host, ftp_user, ftp_password)
             update_segment_keywords(api_url, dataset_id, document_id, segment_id, api_key, processed_content, keywords)
 
         # delete_document(api_url, dataset_id, document_id, api_key)
@@ -261,7 +261,7 @@ if __name__ == "__main__":
             break
         
         # 处理当前页的文档
-        batch_proc_documents(api_url, dataset_id, api_key, ftp_dir_Prefix, save_path, page=page, limit=limit)
+        batch_proc_documents(api_url, dataset_id, api_key, ftp_dir_Prefix, save_path, page=page, limit=limit, ftp_host="10.5.171.20", ftp_user="aiuser", ftp_password="0327*J329")
         
         # 如果返回的文档数量小于 limit，说明已经是最后一页
         if len(document_ids) < limit:

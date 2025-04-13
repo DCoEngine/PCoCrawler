@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 
+# 2024年arXiv假期列表（美国东部时间）
 HOLIDAY_2024 = [
     "2024 15 January",
     "2024 22 May",
@@ -12,13 +13,24 @@ HOLIDAY_2024 = [
     "2024 26 December",
     "2024 31 December",
 ]
+# 将假期字符串转换为日期对象
 HOLIDAY_2024_date = [datetime.strptime(d, "%Y %d %B").date() for d in HOLIDAY_2024]
 
 
 @lru_cache()
 def next_arxiv_update_day(time: datetime):
-    # see https://info.arxiv.org/help/availability.html
-    # arxiv update time is UTC+0 00:00:00
+    """
+    计算arXiv下一次更新的时间
+    Args:
+        time: 当前时间
+    Returns:
+        datetime: 下一次arXiv更新的时间
+    Notes:
+        - arXiv更新时间规则: https://info.arxiv.org/help/availability.html
+        - arXiv更新时间为UTC+0 00:00:00
+        - 美国假期会导致更新推迟
+        - 周末(周六、周日)不更新
+    """
 
     time.astimezone(UTC)
     time_date = time.replace(hour=0, minute=0, second=0, microsecond=0)
